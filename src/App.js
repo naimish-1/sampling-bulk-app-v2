@@ -174,26 +174,35 @@ export default function App() {
   };
 
   const handleBulkSubmit = async (uniqueId) => {
-    const formData = new URLSearchParams();
-    formData.append('action', 'bulkUpdate');
-    formData.append('uniqueId', uniqueId);
-    formData.append('remark', bulkRemarks[uniqueId] || '');
+  const formData = new URLSearchParams();
+  formData.append('action', 'bulkUpdate');
+  formData.append('uniqueId', uniqueId);
+  formData.append('remark', bulkRemarks[uniqueId] || '');
 
-    const file = bulkImages[uniqueId];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        formData.append('imageBase64', reader.result.split(',')[1]);
-        formData.append('imageType', file.type);
-        formData.append('imageName', file.name || 'upload.png');
-        await submitBulk(formData);
-      };
-      reader.readAsDataURL(file);
-    } else {
-      formData.append('imageBase64', 'null');
-      await submitBulk(formData);
-    }
+  const file = bulkImages[uniqueId];
+
+  const resetFields = () => {
+    setBulkRemarks(prev => ({ ...prev, [uniqueId]: '' }));
+    setBulkImages(prev => ({ ...prev, [uniqueId]: null }));
   };
+
+  if (file) {
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      formData.append('imageBase64', reader.result.split(',')[1]);
+      formData.append('imageType', file.type);
+      formData.append('imageName', file.name || 'upload.png');
+      await sendBulkForm(formData);
+      resetFields();
+    };
+    reader.readAsDataURL(file);
+  } else {
+    formData.append('imageBase64', 'null');
+    await sendBulkForm(formData);
+    resetFields();
+  }
+};
+
 
   const submitBulk = async (formData) => {
     await fetch(SCRIPT_URL, {
