@@ -266,34 +266,41 @@ export default function App() {
       {activeTab === 'bulk' && userType === 'sourcing' && (
         <div className="mt-6">
           <h3 className="text-xl font-semibold mb-4">Active Fabric Orders</h3>
-          {bulkOrders.map((order, i) => {
-            const id = order['Unique ID'];
-            return (
-              <div key={i} className="bg-white shadow rounded p-4 mb-4">
-                <p><b>ID:</b> {id}</p>
-                <p><b>Brand:</b> {order['Brand Name']}</p>
-                <p><b>Vendor:</b> {order['Vendor Name']}</p>
-                <textarea
-                  placeholder="Add remark"
-                  className="w-full border p-2 rounded mb-2"
-                  onChange={(e) => setBulkRemarks({ ...bulkRemarks, [id]: e.target.value })}
-                />
-                <input
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  className="mb-2"
-                  onChange={(e) => setBulkImages({ ...bulkImages, [id]: e.target.files[0] })}
-                />
-                <button
-                  onClick={() => handleBulkSubmit(id)}
-                  className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
-                >
-                  Submit Remark
-                </button>
-              </div>
-            );
-          })}
+{bulkOrders.map((order, i) => {
+  const id = order['Unique ID'];
+  return (
+    <div key={i} className="bg-white shadow rounded p-4 mb-4">
+      <p><b>ID:</b> {id}</p>
+      <p><b>Brand:</b> {order['Brand Name']}</p>
+      <p><b>Vendor:</b> {order['Vendor Name']}</p>
+      <p><b>Fabric Detail:</b> {order['Fabric Quality']} | {order['Fabric Composition']}</p>
+      <p><b>Order:</b> {order['Order Quantity']} @ {order['Rate']}</p>
+      <p><b>Inhouse Date:</b> {order['Inhouse Date']}</p>
+      <p><b>History:</b> {order['Last Remark']} | {order['Last Updated']}</p>
+
+      <textarea
+        placeholder="Add remark"
+        className="w-full border p-2 rounded mb-2"
+        value={bulkRemarks[id] || ''}
+        onChange={(e) => setBulkRemarks({ ...bulkRemarks, [id]: e.target.value })}
+      />
+      <input
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="mb-2"
+        onChange={(e) => setBulkImages({ ...bulkImages, [id]: e.target.files[0] })}
+      />
+      <button
+        onClick={() => handleBulkSubmit(id)}
+        className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+      >
+        Submit Remark
+      </button>
+    </div>
+  );
+})}
+
         </div>
       )}
     </div>
