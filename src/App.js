@@ -270,13 +270,13 @@ export default function App() {
   const id = order['Unique ID'];
   return (
     <div key={i} className="bg-white shadow rounded p-4 mb-4">
-      <p><b>ID:</b> {id}</p>
-      <p><b>Brand:</b> {order['Brand Name']}</p>
-      <p><b>Vendor:</b> {order['Vendor Name']}</p>
-      <p><b>Fabric Detail:</b> {order['Fabric Quality']} | {order['Fabric Composition']}</p>
-      <p><b>Order:</b> {order['Order Quantity']} @ {order['Rate']}</p>
-      <p><b>Inhouse Date:</b> {order['Inhouse Date']}</p>
-      <p><b>History:</b> {order['Last Remark']} | {order['Last Updated']}</p>
+<p><b>ID:</b> {id}</p>
+<p><b>Brand:</b> {order['Brand Name']}</p>
+<p><b>Vendor:</b> {order['Vendor Name']}</p>
+<p><b>Fabric Detail:</b> {order['Fabric Quality']} | {order['Fabric Composition']}</p>
+<p><b>Order:</b> {order['Order Quantity']} @ {order['Rate']}</p>
+<p><b>Inhouse Date:</b> {order['Inhouse Date']}</p>
+<p><b>History:</b> {order['Last Remark']} | {order['Last Updated']}</p>
 
       <textarea
         placeholder="Add remark"
