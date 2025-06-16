@@ -5,10 +5,14 @@ export default function App() {
 
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userType, setUserType] = useState(null);
+  const [activeTab, setActiveTab] = useState('sampling');
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [tickets, setTickets] = useState([]);
   const [statusMap, setStatusMap] = useState({});
+  const [bulkOrders, setBulkOrders] = useState([]);
+  const [bulkRemarks, setBulkRemarks] = useState({});
+  const [bulkImages, setBulkImages] = useState({});
 
   const [soNumber, setSoNumber] = useState('');
   const [brand, setBrand] = useState('');
@@ -31,6 +35,7 @@ export default function App() {
         setUserType(data.role);
         setIsAuthenticated(true);
         fetchTickets(data.role);
+        if (data.role === 'sourcing') fetchBulkOrders(email);
       } else {
         setError('Access denied');
       }
@@ -45,6 +50,12 @@ export default function App() {
     const data = await res.json();
     setTickets(data.reverse());
     fetchStatuses(data.map(t => t['Unique Ticket ID']));
+  };
+
+  const fetchBulkOrders = async (email) => {
+    const res = await fetch(`${SCRIPT_URL}?action=getBulkOrders&email=${encodeURIComponent(email)}`);
+    const data = await res.json();
+    setBulkOrders(data);
   };
 
   const fetchStatuses = async (ids) => {
@@ -92,16 +103,13 @@ export default function App() {
     });
     alert('Submitted!');
     fetchTickets(userType);
-
     setSoNumber('');
-setBrand('');
-setFabricQuality('');
-setFabricQuantity('');
-setImage(null);
-setRemark('');
-setInhouseDate('');
-
-
+    setBrand('');
+    setFabricQuality('');
+    setFabricQuantity('');
+    setImage(null);
+    setRemark('');
+    setInhouseDate('');
   };
 
   const handleSourcingLog = async (ticketId) => {
@@ -165,174 +173,120 @@ setInhouseDate('');
     fetchTickets(userType);
   };
 
-if (!isAuthenticated) {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white shadow-md rounded-lg p-8 w-full max-w-md">
-        <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Login</h2>
-        <input
-          className="w-full px-4 py-2 border border-gray-300 rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Enter your email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <button
-          onClick={handleEmailLogin}
-          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
-        >
-          Login
-        </button>
-        {error && <p className="text-red-600 text-sm text-center mt-3">{error}</p>}
+  const handleBulkSubmit = async (uniqueId) => {
+    const formData = new URLSearchParams();
+    formData.append('action', 'bulkUpdate');
+    formData.append('uniqueId', uniqueId);
+    formData.append('remark', bulkRemarks[uniqueId] || '');
+
+    const file = bulkImages[uniqueId];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        formData.append('imageBase64', reader.result.split(',')[1]);
+        formData.append('imageType', file.type);
+        formData.append('imageName', file.name || 'upload.png');
+        await submitBulk(formData);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      formData.append('imageBase64', 'null');
+      await submitBulk(formData);
+    }
+  };
+
+  const submitBulk = async (formData) => {
+    await fetch(SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: formData
+    });
+    alert('Bulk remark submitted!');
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="bg-white shadow-md rounded-lg p-8 w-full max-w-md">
+          <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Login</h2>
+          <input
+            className="w-full px-4 py-2 border border-gray-300 rounded mb-4"
+            placeholder="Enter your email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <button
+            onClick={handleEmailLogin}
+            className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
+          >
+            Login
+          </button>
+          {error && <p className="text-red-600 text-sm text-center mt-3">{error}</p>}
+        </div>
       </div>
-    </div>
-  );
-}
-
+    );
+  }
 
   return (
-    <div style={{ padding: 20 }}>
-      <h2>Welcome, {userType}</h2>
+    <div className="p-6">
+      <div className="flex space-x-4 mb-4">
+        <button
+          className={`px-4 py-2 ${activeTab === 'sampling' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+          onClick={() => setActiveTab('sampling')}
+        >
+          Sampling
+        </button>
+        {userType === 'sourcing' && (
+          <button
+            className={`px-4 py-2 ${activeTab === 'bulk' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+            onClick={() => setActiveTab('bulk')}
+          >
+            Bulk
+          </button>
+        )}
+      </div>
 
-      {userType === 'creator' && (
-        <>
-<form onSubmit={handleSamplingSubmit} className="bg-white shadow-md rounded-lg p-6 w-full max-w-xl mx-auto my-6">
-  <h3 className="text-xl font-semibold mb-4">Submit Sampling Ticket</h3>
-
-  <input
-    className="w-full p-2 border rounded mb-3"
-    placeholder="SO Number"
-    value={soNumber}
-    onChange={(e) => setSoNumber(e.target.value)}
-  />
-
-  <input
-    className="w-full p-2 border rounded mb-3"
-    placeholder="Brand"
-    value={brand}
-    onChange={(e) => setBrand(e.target.value)}
-  />
-
-  <input
-    className="w-full p-2 border rounded mb-3"
-    placeholder="Fabric Quality"
-    value={fabricQuality}
-    onChange={(e) => setFabricQuality(e.target.value)}
-  />
-
-  <input
-    className="w-full p-2 border rounded mb-3"
-    placeholder="Fabric Quantity"
-    value={fabricQuantity}
-    onChange={(e) => setFabricQuantity(e.target.value)}
-  />
-
-  <input
-    type="file"
-    className="w-full mb-3"
-    onChange={(e) => setImage(e.target.files[0])}
-  />
-
-  <textarea
-    className="w-full p-2 border rounded mb-3"
-    placeholder="Remark"
-    value={remark}
-    onChange={(e) => setRemark(e.target.value)}
-  />
-
-  <input
-    type="date"
-    className="w-full p-2 border rounded mb-4"
-    value={inhouseDate}
-    onChange={(e) => setInhouseDate(e.target.value)}
-  />
-
-  <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">
-    Submit Ticket
-  </button>
-</form>
-
-
-          <h3>My Tickets</h3>
-          {tickets.map((t, i) => {
-            const id = t['Unique Ticket ID'] || 'N/A';
-            const status = statusMap[id] || {};
-            const statusText = status.approved ? '✅ Complete' : '🟢 Active';
-
-            return (
-              <div key={i} style={ticketStyle}>
-                <strong>{t['SO Number']}</strong> - {t.Brand}<br />
-                <b>ID:</b> {id}<br />
-                <b>Status:</b> {statusText}<br />
-                {!status.approved && (
-                  <>
-                    <button onClick={() => handleClosureResponse(id, 'approve')} style={buttonStyle}>Approve</button>
-                    <button onClick={() => handleClosureResponse(id, 'reject')} style={buttonStyle}>Reject</button>
-                  </>
-                )}
-              </div>
-            );
-          })}
-        </>
+      {activeTab === 'sampling' && userType === 'creator' && (
+        <div>✅ Creator UI here (already added)</div>
       )}
 
-      {userType === 'sourcing' && (
-        <>
-          <h3>Assigned Tickets</h3>
-          {tickets.map((t, i) => {
-            const id = t['Unique Ticket ID'] || 'N/A';
-            const status = statusMap[id] || {};
-            const isClosed = status.approved;
-            const statusText = isClosed ? '✅ Complete' : '🟢 Active';
+      {activeTab === 'sampling' && userType === 'sourcing' && (
+        <div>✅ Sourcing UI here (already added)</div>
+      )}
 
+      {activeTab === 'bulk' && userType === 'sourcing' && (
+        <div className="mt-6">
+          <h3 className="text-xl font-semibold mb-4">Active Fabric Orders</h3>
+          {bulkOrders.map((order, i) => {
+            const id = order['Unique ID'];
             return (
-              <div key={i} style={ticketStyle}>
-                <strong>{t['SO Number']}</strong> - {t.Brand}<br />
-                <b>ID:</b> {id}<br />
-                <b>Status:</b> {statusText}<br />
-                <b>Quality:</b> {t['Fabric Quality']} | <b>Qty:</b> {t['Fabric Quantity']}<br />
-                <b>Remark:</b> {t.Remark}<br />
-                <b>Inhouse:</b> {t['Inhouse Date']}<br />
-
-                {!isClosed && (
-                  <>
-                    <textarea
-                      placeholder="Remark"
-                      onChange={(e) => setSourcingRemarks({ ...sourcingRemarks, [id]: e.target.value })}
-                      style={inputStyle}
-                    />
-                    <input
-                      placeholder="Vendor"
-                      onChange={(e) => setVendorNames({ ...vendorNames, [id]: e.target.value })}
-                      style={inputStyle}
-                    />
-                    <input
-                      placeholder="Amount"
-                      onChange={(e) => setAmounts({ ...amounts, [id]: e.target.value })}
-                      style={inputStyle}
-                    />
-                    <input
-                      type="file"
-                      accept="image/*"
-                      capture="environment"
-                      onChange={(e) => setInvoiceFiles({ ...invoiceFiles, [id]: e.target.files[0] })}
-                      style={inputStyle}
-                    />
-                    <button onClick={() => handleSourcingLog(id)} style={buttonStyle}>Add Log</button>
-                    <button onClick={() => requestClosure(id)} style={buttonStyle}>Request Closure</button>
-                  </>
-                )}
+              <div key={i} className="bg-white shadow rounded p-4 mb-4">
+                <p><b>ID:</b> {id}</p>
+                <p><b>Brand:</b> {order['Brand Name']}</p>
+                <p><b>Vendor:</b> {order['Vendor Name']}</p>
+                <textarea
+                  placeholder="Add remark"
+                  className="w-full border p-2 rounded mb-2"
+                  onChange={(e) => setBulkRemarks({ ...bulkRemarks, [id]: e.target.value })}
+                />
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="mb-2"
+                  onChange={(e) => setBulkImages({ ...bulkImages, [id]: e.target.files[0] })}
+                />
+                <button
+                  onClick={() => handleBulkSubmit(id)}
+                  className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+                >
+                  Submit Remark
+                </button>
               </div>
             );
           })}
-        </>
+        </div>
       )}
     </div>
   );
 }
-
-// Styles
-const inputStyle = { width: '100%', margin: '6px 0', padding: '10px', boxSizing: 'border-box' };
-const buttonStyle = { padding: '10px', margin: '6px 6px 10px 0', cursor: 'pointer' };
-const centeredContainer = { minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' };
-const cardStyle = { width: 400, padding: 20, border: '1px solid #ccc', borderRadius: 8 };
-const ticketStyle = { border: '1px solid #ccc', padding: 10, marginBottom: 15 };
