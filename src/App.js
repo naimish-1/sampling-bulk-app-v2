@@ -92,6 +92,16 @@ export default function App() {
     });
     alert('Submitted!');
     fetchTickets(userType);
+
+    setSoNumber('');
+setBrand('');
+setFabricQuality('');
+setFabricQuantity('');
+setImage(null);
+setRemark('');
+setInhouseDate('');
+
+
   };
 
   const handleSourcingLog = async (ticketId) => {
