@@ -255,13 +255,149 @@ export default function App() {
         )}
       </div>
 
-      {activeTab === 'sampling' && userType === 'creator' && (
-        <div>✅ Creator UI here (already added)</div>
-      )}
+{activeTab === 'sampling' && userType === 'creator' && (
+  <>
+    <form onSubmit={handleSamplingSubmit} className="bg-white shadow-md rounded-lg p-6 w-full max-w-xl mx-auto my-6">
+      <h3 className="text-xl font-semibold mb-4">Submit Sampling Ticket</h3>
 
-      {activeTab === 'sampling' && userType === 'sourcing' && (
-        <div>✅ Sourcing UI here (already added)</div>
-      )}
+      <input
+        className="w-full p-2 border rounded mb-3"
+        placeholder="SO Number"
+        value={soNumber}
+        onChange={(e) => setSoNumber(e.target.value)}
+      />
+      <input
+        className="w-full p-2 border rounded mb-3"
+        placeholder="Brand"
+        value={brand}
+        onChange={(e) => setBrand(e.target.value)}
+      />
+      <input
+        className="w-full p-2 border rounded mb-3"
+        placeholder="Fabric Quality"
+        value={fabricQuality}
+        onChange={(e) => setFabricQuality(e.target.value)}
+      />
+      <input
+        className="w-full p-2 border rounded mb-3"
+        placeholder="Fabric Quantity"
+        value={fabricQuantity}
+        onChange={(e) => setFabricQuantity(e.target.value)}
+      />
+      <input
+        type="file"
+        className="w-full mb-3"
+        onChange={(e) => setImage(e.target.files[0])}
+      />
+      <textarea
+        className="w-full p-2 border rounded mb-3"
+        placeholder="Remark"
+        value={remark}
+        onChange={(e) => setRemark(e.target.value)}
+      />
+      <label className="block mb-1 font-medium">Inhouse Expectation:</label>
+      <input
+        type="date"
+        className="w-full p-2 border rounded mb-4"
+        value={inhouseDate}
+        onChange={(e) => setInhouseDate(e.target.value)}
+      />
+
+      <button
+        type="submit"
+        className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
+      >
+        Submit Ticket
+      </button>
+    </form>
+
+    <h3 className="text-xl font-semibold mb-4">My Tickets</h3>
+    {tickets.map((t, i) => {
+      const id = t['Unique Ticket ID'] || 'N/A';
+      const status = statusMap[id] || {};
+      const statusText = status.approved ? '✅ Complete' : status.rejected ? '🟠 Active' : status.requested ? '⏳ Awaiting approval' : '🟢 Active';
+
+      return (
+        <div key={i} className="bg-white shadow rounded p-4 mb-4">
+          <p><b>ID:</b> {id}</p>
+          <p><b>SO Number:</b> {t['SO Number']}</p>
+          <p><b>Brand:</b> {t['Brand']}</p>
+          <p><b>Status:</b> {statusText}</p>
+
+          {status.requested && !status.approved && !status.rejected && (
+            <>
+              <button onClick={() => handleClosureResponse(id, 'approve')} className="bg-green-600 text-white px-3 py-1 rounded mr-2">
+                Approve
+              </button>
+              <button onClick={() => handleClosureResponse(id, 'reject')} className="bg-red-600 text-white px-3 py-1 rounded">
+                Reject
+              </button>
+            </>
+          )}
+        </div>
+      );
+    })}
+  </>
+)}
+
+
+{activeTab === 'sampling' && userType === 'sourcing' && (
+  <>
+    <h3 className="text-xl font-semibold mb-4">Assigned Tickets</h3>
+    {tickets.map((t, i) => {
+      const id = t['Unique Ticket ID'] || 'N/A';
+      const status = statusMap[id] || {};
+      const isClosed = status.approved;
+      const statusText = isClosed ? '✅ Complete' : '🟢 Active';
+
+      return (
+        <div key={i} className="bg-white shadow rounded p-4 mb-4">
+          <p><b>ID:</b> {id}</p>
+          <p><b>SO Number:</b> {t['SO Number']}</p>
+          <p><b>Brand:</b> {t['Brand']}</p>
+          <p><b>Fabric:</b> {t['Fabric Quality']} | {t['Fabric Quantity']}</p>
+          <p><b>Remark:</b> {t['Remark']}</p>
+          <p><b>Inhouse:</b> {t['Inhouse Date']}</p>
+          <p><b>Status:</b> {statusText}</p>
+
+          {!isClosed && (
+            <>
+              <textarea
+                placeholder="Add remark"
+                className="w-full border p-2 rounded mb-2"
+                value={sourcingRemarks[id] || ''}
+                onChange={(e) => setSourcingRemarks({ ...sourcingRemarks, [id]: e.target.value })}
+              />
+              <input
+                placeholder="Vendor Name"
+                className="w-full border p-2 rounded mb-2"
+                onChange={(e) => setVendorNames({ ...vendorNames, [id]: e.target.value })}
+              />
+              <input
+                placeholder="Amount"
+                className="w-full border p-2 rounded mb-2"
+                onChange={(e) => setAmounts({ ...amounts, [id]: e.target.value })}
+              />
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="mb-2"
+                onChange={(e) => setInvoiceFiles({ ...invoiceFiles, [id]: e.target.files[0] })}
+              />
+              <button onClick={() => handleSourcingLog(id)} className="bg-blue-600 text-white px-3 py-1 rounded mr-2">
+                Add Log
+              </button>
+              <button onClick={() => requestClosure(id)} className="bg-yellow-500 text-white px-3 py-1 rounded">
+                Request Closure
+              </button>
+            </>
+          )}
+        </div>
+      );
+    })}
+  </>
+)}
 
       {activeTab === 'bulk' && userType === 'sourcing' && (
         <div className="mt-6">
