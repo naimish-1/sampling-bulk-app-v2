@@ -124,26 +124,6 @@ export default function App() {
     }
   };
 
-  if (!isAuthenticated) {
-    return (
-      <div style={centeredContainer}>
-        <div style={cardStyle}>
-          <h2 style={{ textAlign: 'center' }}>Login</h2>
-          <input
-            style={inputStyle}
-            placeholder="Enter your email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <button style={buttonStyle} onClick={handleEmailLogin}>
-            Login
-          </button>
-          {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div style={{ padding: 20 }}>
       <div style={headerStyle}>
@@ -218,6 +198,8 @@ const headerStyle = {
   const handleSourcingLog = async (ticketId) => {
     const formData = new URLSearchParams();
     formData.append('action', 'logSourcing');
+    formData.append('action', 'submitTicket');
+
     formData.append('ticketId', ticketId);
     formData.append('remark', sourcingRemarks[ticketId] || '');
     formData.append('vendorName', vendorNames[ticketId] || '');
