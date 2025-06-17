@@ -69,9 +69,9 @@ export default function App() {
   };
 
   const handleSamplingSubmit = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
+
     const formData = new URLSearchParams();
-    formData.append('action', 'submitTicket');
     formData.append('email', email);
     formData.append('soNumber', soNumber);
     formData.append('brand', brand);
@@ -85,7 +85,8 @@ export default function App() {
     if (image) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        formData.append('image', reader.result.split(',')[1]);
+        const base64 = reader.result.split(',')[1];
+        formData.append('image', base64);
         submitToScript(formData);
       };
       reader.readAsDataURL(image);
@@ -96,21 +97,123 @@ export default function App() {
   };
 
   const submitToScript = async (formData) => {
-    await fetch(SCRIPT_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: formData
-    });
-    alert('Submitted!');
-    fetchTickets(userType);
-    setSoNumber('');
-    setBrand('');
-    setFabricQuality('');
-    setFabricQuantity('');
-    setImage(null);
-    setRemark('');
-    setInhouseDate('');
+    try {
+      await fetch(
+        'https://script.google.com/macros/s/AKfycbwA5tEDjwD8XBub1kZLZSG_KsYjPH5FR4zqvRY4Y7DbYOKZ7dUvfhes_ifI6IoOul_ozQ/exec',
+        {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: formData
+        }
+      );
+
+      alert('Sampling Ticket submitted!');
+      setSoNumber('');
+      setBrand('');
+      setFabricQuality('');
+      setFabricQuantity('');
+      setImage(null);
+      setRemark('');
+      setInhouseDate('');
+    } catch (error) {
+      console.error(error);
+      alert('Submission failed.');
+    }
   };
+
+  if (!isAuthenticated) {
+    return (
+      <div style={centeredContainer}>
+        <div style={cardStyle}>
+          <h2 style={{ textAlign: 'center' }}>Login</h2>
+          <input
+            style={inputStyle}
+            placeholder="Enter your email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <button style={buttonStyle} onClick={handleEmailLogin}>
+            Login
+          </button>
+          {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ padding: 20 }}>
+      <div style={headerStyle}>
+        <h1>Textile Workflow Dashboard</h1>
+        <div>
+          <span>Logged in as: {userType}</span>{' '}
+          <button onClick={() => { setIsAuthenticated(false); setEmail(''); }}>Logout</button>
+        </div>
+      </div>
+
+      <div style={{ marginTop: 20 }}>
+        <button onClick={() => setActiveTab('sampling')} style={buttonStyle}>Sampling</button>
+        <button onClick={() => setActiveTab('bulk')} style={buttonStyle}>Bulk</button>
+      </div>
+
+      <div style={{ marginTop: 20 }}>
+        {activeTab === 'sampling' && userType === 'creator' && (
+          <form onSubmit={handleSamplingSubmit} style={{ maxWidth: 600 }}>
+            <h2>Sampling Ticket</h2>
+            <input placeholder="SO Number" value={soNumber} onChange={(e) => setSoNumber(e.target.value)} style={inputStyle} />
+            <input placeholder="Brand" value={brand} onChange={(e) => setBrand(e.target.value)} style={inputStyle} />
+            <input placeholder="Fabric Quality" value={fabricQuality} onChange={(e) => setFabricQuality(e.target.value)} style={inputStyle} />
+            <input placeholder="Fabric Quantity" value={fabricQuantity} onChange={(e) => setFabricQuantity(e.target.value)} style={inputStyle} />
+            <input type="file" onChange={(e) => setImage(e.target.files[0])} style={{ margin: '10px 0' }} />
+            <textarea placeholder="Remark (optional)" value={remark} onChange={(e) => setRemark(e.target.value)} style={inputStyle} />
+            <label>Inhouse Expectation Date:</label>
+            <input type="date" value={inhouseDate} onChange={(e) => setInhouseDate(e.target.value)} style={inputStyle} />
+            <button type="submit" style={{ padding: 10, marginTop: 10 }}>Submit Sampling Ticket</button>
+          </form>
+        )}
+        {activeTab === 'sampling' && userType === 'sourcing' && <p>Sourcing Sampling UI goes here…</p>}
+        {activeTab === 'bulk' && <p>Bulk Section UI goes here…</p>}
+      </div>
+    </div>
+  );
+
+
+const inputStyle = {
+  width: '100%',
+  padding: '10px',
+  margin: '10px 0',
+  boxSizing: 'border-box'
+};
+
+const buttonStyle = {
+  padding: '10px',
+  marginRight: '10px',
+  cursor: 'pointer'
+};
+
+const centeredContainer = {
+  minHeight: '100vh',
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center'
+};
+
+const cardStyle = {
+  width: '100%',
+  maxWidth: 400,
+  padding: 20,
+  border: '1px solid #ccc',
+  borderRadius: 8
+};
+
+const headerStyle = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center'
+};
 
   const handleSourcingLog = async (ticketId) => {
     const formData = new URLSearchParams();
