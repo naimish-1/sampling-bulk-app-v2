@@ -73,6 +73,8 @@ export default function App() {
 
     const formData = new URLSearchParams();
     formData.append('email', email);
+    formData.append('action', 'submitTicket');
+
     formData.append('soNumber', soNumber);
     formData.append('brand', brand);
     formData.append('fabricQuality', fabricQuality);
@@ -154,8 +156,6 @@ export default function App() {
             <button type="submit" style={{ padding: 10, marginTop: 10 }}>Submit Sampling Ticket</button>
           </form>
         )}
-        {activeTab === 'sampling' && userType === 'sourcing' && <p>Sourcing Sampling UI goes here…</p>}
-        {activeTab === 'bulk' && <p>Bulk Section UI goes here…</p>}
       </div>
     </div>
   );
@@ -198,8 +198,6 @@ const headerStyle = {
   const handleSourcingLog = async (ticketId) => {
     const formData = new URLSearchParams();
     formData.append('action', 'logSourcing');
-    formData.append('action', 'submitTicket');
-
     formData.append('ticketId', ticketId);
     formData.append('remark', sourcingRemarks[ticketId] || '');
     formData.append('vendorName', vendorNames[ticketId] || '');
@@ -357,66 +355,6 @@ const headerStyle = {
         Submit Ticket
       </button>
     </form>
-  </>
-)}
-
-
-
-{activeTab === 'sampling' && userType === 'sourcing' && (
-  <>
-    <h3 className="text-xl font-semibold mb-4">Assigned Tickets</h3>
-    {tickets.map((t, i) => {
-      const id = t['Unique Ticket ID'] || 'N/A';
-      const status = statusMap[id] || {};
-      const isClosed = status.approved;
-      const statusText = isClosed ? '✅ Complete' : '🟢 Active';
-
-      return (
-        <div key={i} className="bg-white shadow rounded p-4 mb-4">
-          <p><b>ID:</b> {id}</p>
-          <p><b>SO Number:</b> {t['SO Number']}</p>
-          <p><b>Brand:</b> {t['Brand']}</p>
-          <p><b>Fabric:</b> {t['Fabric Quality']} | {t['Fabric Quantity']}</p>
-          <p><b>Remark:</b> {t['Remark']}</p>
-          <p><b>Inhouse:</b> {t['Inhouse Date']}</p>
-          <p><b>Status:</b> {statusText}</p>
-
-          {!isClosed && (
-            <>
-              <textarea
-                placeholder="Add remark"
-                className="w-full border p-2 rounded mb-2"
-                value={sourcingRemarks[id] || ''}
-                onChange={(e) => setSourcingRemarks({ ...sourcingRemarks, [id]: e.target.value })}
-              />
-              <input
-                placeholder="Vendor Name"
-                className="w-full border p-2 rounded mb-2"
-                onChange={(e) => setVendorNames({ ...vendorNames, [id]: e.target.value })}
-              />
-              <input
-                placeholder="Amount"
-                className="w-full border p-2 rounded mb-2"
-                onChange={(e) => setAmounts({ ...amounts, [id]: e.target.value })}
-              />
-              <input
-                type="file"
-                accept="image/*"
-                capture="environment"
-                className="mb-2"
-                onChange={(e) => setInvoiceFiles({ ...invoiceFiles, [id]: e.target.files[0] })}
-              />
-              <button onClick={() => handleSourcingLog(id)} className="bg-blue-600 text-white px-3 py-1 rounded mr-2">
-                Add Log
-              </button>
-              <button onClick={() => requestClosure(id)} className="bg-yellow-500 text-white px-3 py-1 rounded">
-                Request Closure
-              </button>
-            </>
-          )}
-        </div>
-      );
-    })}
   </>
 )}
 
